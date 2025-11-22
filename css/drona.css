@@ -467,3 +467,28 @@ body {
 .mock-msg, .mock-title { transition: opacity 0.5s ease, transform 0.5s ease; opacity: 1; }
 .mock-msg.fade-out { opacity: 0; transform: translateY(10px); }
 .mock-title.fade-out { opacity: 0; }
+
+.suggestions-container {
+    /* Ensure it stacks vertically */
+    display: flex;
+    flex-direction: column;
+    
+    /* Add spacing between buttons */
+    gap: 10px; 
+    
+    /* CRITICAL: Do not set a fixed height (like height: 200px). 
+       Use auto or min-height instead. */
+    height: auto; 
+    padding: 10px;
+    
+    /* Handle overflow if the parent card is fixed */
+    overflow-y: auto; /* Allows scrolling if the list gets too long */
+}
+
+.suggestion-btn {
+    /* Ensure text doesn't overflow the button */
+    white-space: normal; 
+    height: auto; /* Allow button to grow with text */
+    padding: 10px;
+    text-align: left; /* usually looks better for long questions */
+}
