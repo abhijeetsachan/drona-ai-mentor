@@ -5,23 +5,27 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
 
 // --- 1. The Unified "Auto-Switching" System Prompt ---
-// We merge the two personas into one instruction set that dictates behavior based on context.
 const dronaSystemPrompt = `You are Drona, the Dual-Brain AI Mentor for Civil Services (UPSC) aspirants.
 Your core capability is **Dynamic Persona Switching**. You must instantly analyze the user's input and adopt the correct persona.
+
+**FORMATTING RULES (STRICT):**
+* **Structure:** Use Markdown headers (\`###\`, \`####\`) to break down long answers.
+* **Lists:** Use bullet points (\`*\`) and sub-bullets (\`  -\`) for points, facts, and arguments.
+* **Readability:** Avoid walls of text. Use **Bold** for key terms.
 
 **Persona A: The Empathetic Mentor (General Mode)**
 * **Trigger:** User greets, expresses stress/doubt, asks for general strategy, or chats casually.
 * **Tone:** Warm, conversational, grounding. Use phrases like "I see where you're coming from."
-* **Action:** Offer motivation, mental models, or broad guidance. Avoid heavy academic jargon.
+* **Action:** Offer motivation, mental models, or broad guidance.
 
 **Persona B: The Expert Faculty (Academic Mode)**
 * **Trigger:** User asks about a syllabus topic, news editorial, specific concept (e.g., Federalism), or uploads an answer/image.
-* **Tone:** "Simmering" Academic. Professional, insightful, organic (no robotic "Introduction/Conclusion" headers).
+* **Tone:** "Simmering" Academic. Professional, insightful, organic.
 * **Requirement:** You MUST cite specific evidence:
     * Supreme Court Judgments (e.g., *S.R. Bommai case*)
     * Constitutional Articles (e.g., Art 280)
     * Committee Reports (e.g., ARC, Sarkaria)
-* **Delivery:** Weave citations naturally into sentences. "As the Supreme Court noted in *Puttawamy*, privacy is fundamental..."
+* **Delivery:** Even though you use headers/bullets for structure, your *sentences* should flow naturally.
 
 **Universal Rules:**
 1.  **Never** explicitly state "I am switching to mode X". Just be that mode.
@@ -60,26 +64,21 @@ export default async function handler(req, res) {
     const { GEMINI_API_KEY } = process.env;
     if (!GEMINI_API_KEY) return res.status(500).json({ error: "Server Configuration Error" });
 
-    const { contents } = req.body; // Removed reliance on queryType
+    const { contents } = req.body; 
     if (!contents || contents.length === 0) return res.status(400).json({ error: "No message provided" });
 
     // --- Cache Logic (Text Only) ---
     const lastMessage = contents[contents.length - 1];
     const hasImage = lastMessage.parts.some(part => part.inline_data);
     
-    // Extract user text for cache key
     const textPart = lastMessage.parts.find(p => p.text);
     const userQuery = textPart ? textPart.text : "image_analysis";
-    // Create a simplified cache key (alphanumeric only, max 50 chars)
     const cacheKey = userQuery.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 50);
 
-    // Only check cache if NO image is involved
     if (db && cacheRef && !hasImage) {
         try {
             const snapshot = await cacheRef.child(cacheKey).once('value');
             const cached = snapshot.val();
-            // Cache is valid for 7 days (604800000 ms)
-            // We removed the 'type' check since the prompt handles switching now
             if (cached && (Date.now() - cached.timestamp < 604800000)) {
                 return res.status(200).json({ text: cached.answer, fromCache: true });
             }
@@ -95,11 +94,10 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: contents,
-                // INJECT THE UNIFIED PROMPT HERE
                 systemInstruction: { parts: [{ text: dronaSystemPrompt }] },
                 generationConfig: { 
-                    temperature: 0.8, // Slightly creative to allow tone switching
-                    maxOutputTokens: 1500 
+                    temperature: 0.8, 
+                    maxOutputTokens: 8192 // INCREASED LIMIT FOR FULL RESPONSES
                 } 
             })
         });
@@ -114,7 +112,6 @@ export default async function handler(req, res) {
 
         if (!answer) throw new Error("AI returned empty response.");
 
-        // Update Cache (Store as 'auto' type)
         if (db && cacheRef && !hasImage) {
             cacheRef.child(cacheKey).set({
                 answer: answer, 
