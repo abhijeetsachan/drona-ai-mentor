@@ -540,4 +540,34 @@ body {
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
+/* --- Beta Superscripted Text on Logo ---*/
+.beta-badge {
+    display: inline-block;
+    font-size: 0.45em; /* Relative size so it scales with logo */
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+    /* Position: Superscript but closer */
+    vertical-align: top;
+    position: relative;
+    top: -0.4em;      /* Moves it up */
+    margin-left: 2px; /* Tiny space between Drona and Beta */
 
+    /* Gradient Text */
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    color: transparent;
+    
+    /* ENHANCEMENT: Neon Glow Effect */
+    /* This creates a glow around the gradient text shape */
+    filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.5));
+    
+    /* Optional: Subtle pulse animation */
+    animation: neon-pulse 3s infinite alternate;
+}
+
+@keyframes neon-pulse {
+    from { filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.5)); opacity: 0.8; }
+    to   { filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.8)); opacity: 1; }
+}
