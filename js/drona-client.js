@@ -366,12 +366,33 @@ async function loadTrendingTopics() {
         
         if (data.topics && data.topics.length > 0) {
             const container = document.createElement('div');
-            container.className = 'flex flex-col gap-2 mt-2';
-            container.innerHTML = `<span class="text-xs font-semibold text-muted uppercase tracking-wider">Suggested Topics</span>`;
-            
-            data.topics.forEach(topic => {
-                const btn = document.createElement('button');
-                btn.className = 'text-left text-sm bg-slate-50 hover:bg-blue-50 text-blue-700 border border-blue-100 hover:border-blue-300 p-2 rounded-md transition-colors duration-200';
+            // ... inside loadTrendingTopics ...
+if (data.topics && data.topics.length > 0) {
+    const container = document.createElement('div');
+    container.className = 'suggestion-group'; // Use new CSS class
+    
+    // Use the new label class
+    container.innerHTML = `<span class="suggestion-label">Suggested Topics</span>`;
+    
+    data.topics.forEach(topic => {
+        const btn = document.createElement('button');
+        btn.className = 'suggestion-btn'; // Use new CSS class
+        btn.textContent = topic;
+        btn.onclick = () => { 
+            DOMElements.input.value = topic; 
+            handleSubmit(new Event('submit')); 
+        };
+        container.appendChild(btn);
+    });
+    
+    const msgDiv = document.createElement('div');
+    // Removed 'ai' class so it doesn't look like a chat bubble, but a system message
+    msgDiv.className = 'drona-message max-w-[90%]'; 
+    msgDiv.appendChild(container);
+    
+    DOMElements.messages.appendChild(msgDiv);
+    scrollToBottom();
+}
                 btn.textContent = topic;
                 btn.onclick = () => { 
                     DOMElements.input.value = topic; 
