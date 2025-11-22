@@ -469,43 +469,66 @@ body {
 .mock-title.fade-out { opacity: 0; }
 
 
-/* Add to css/drona.css */
-
+/* --- Suggestions Styling Fix --- */
 .suggestion-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 10px;
+    width: 100%;
+}
+
+.suggestion-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    margin-bottom: 4px;
+    display: block;
 }
 
 .suggestion-btn {
     width: 100%;
     text-align: left;
-    background: rgba(255, 255, 255, 0.03); /* Subtle glass background */
-    border: 1px solid var(--glass-border);
-    color: #94a3b8; /* Muted text */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
     padding: 12px 16px;
     border-radius: 12px;
-    font-size: 13px;
+    font-size: 14px;
     font-family: 'Outfit', sans-serif;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     line-height: 1.4;
+    position: relative;
+    overflow: hidden;
 }
 
 .suggestion-btn:hover {
-    background: rgba(124, 58, 237, 0.1); /* Slight purple tint on hover */
-    border-color: rgba(124, 58, 237, 0.3);
+    background: rgba(124, 58, 237, 0.15); /* Purple tint */
+    border-color: rgba(124, 58, 237, 0.5);
     color: #fff;
-    transform: translateX(4px); /* Slide effect */
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.suggestion-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #64748b;
-    margin-bottom: 8px;
-    display: block;
+.suggestion-btn:active {
+    transform: scale(0.98);
+}
+
+/* Add a tiny arrow on hover */
+.suggestion-btn::after {
+    content: '→';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: 0.2s;
+    color: #a5b4fc;
+}
+
+.suggestion-btn:hover::after {
+    opacity: 1;
+    right: 16px;
 }
