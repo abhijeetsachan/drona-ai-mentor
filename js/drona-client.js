@@ -365,34 +365,17 @@ async function loadTrendingTopics() {
         const data = await res.json();
         
         if (data.topics && data.topics.length > 0) {
+            // Container for the suggestions
             const container = document.createElement('div');
-            // ... inside loadTrendingTopics ...
-if (data.topics && data.topics.length > 0) {
-    const container = document.createElement('div');
-    container.className = 'suggestion-group'; // Use new CSS class
-    
-    // Use the new label class
-    container.innerHTML = `<span class="suggestion-label">Suggested Topics</span>`;
-    
-    data.topics.forEach(topic => {
-        const btn = document.createElement('button');
-        btn.className = 'suggestion-btn'; // Use new CSS class
-        btn.textContent = topic;
-        btn.onclick = () => { 
-            DOMElements.input.value = topic; 
-            handleSubmit(new Event('submit')); 
-        };
-        container.appendChild(btn);
-    });
-    
-    const msgDiv = document.createElement('div');
-    // Removed 'ai' class so it doesn't look like a chat bubble, but a system message
-    msgDiv.className = 'drona-message max-w-[90%]'; 
-    msgDiv.appendChild(container);
-    
-    DOMElements.messages.appendChild(msgDiv);
-    scrollToBottom();
-}
+            container.className = 'suggestion-group';
+            
+            // Label
+            container.innerHTML = `<span class="suggestion-label">Suggested Topics</span>`;
+            
+            // Generate Buttons
+            data.topics.forEach(topic => {
+                const btn = document.createElement('button');
+                btn.className = 'suggestion-btn';
                 btn.textContent = topic;
                 btn.onclick = () => { 
                     DOMElements.input.value = topic; 
@@ -401,8 +384,12 @@ if (data.topics && data.topics.length > 0) {
                 container.appendChild(btn);
             });
             
+            // Create the AI message bubble to hold these suggestions
             const msgDiv = document.createElement('div');
-            msgDiv.className = 'drona-message ai max-w-[85%]';
+            // 'ai' class gives it the dark background, 'drona-message' gives shape
+            msgDiv.className = 'drona-message ai'; 
+            msgDiv.style.maxWidth = '90%'; // Inline fix for width
+            
             msgDiv.appendChild(container);
             
             DOMElements.messages.appendChild(msgDiv);
