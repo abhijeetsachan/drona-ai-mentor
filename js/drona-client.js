@@ -1,6 +1,6 @@
 /**
  * js/drona-client.js
- * Simmering Edition: Persistence + Voice Input Enabled
+ * Simmering Edition: Persistence + Voice Input + Smart Scrolling + Formatted Markdown
  */
 
 const API_CHAT = '/api/chat';
@@ -11,7 +11,7 @@ let conversationHistory = [];
 let isChatOpen = false;
 let DOMElements = {};
 let pendingImages = [];
-let recognition; // Voice Recognition Instance
+let recognition; 
 let isListening = false;
 
 const GREETINGS = [
@@ -60,7 +60,7 @@ export function initDrona() {
         input: document.getElementById('drona-input'),
         fileInput: document.getElementById('drona-file'),
         attachBtn: document.getElementById('drona-attach-btn'),
-        micBtn: document.getElementById('drona-mic-btn'), // Added Mic Button
+        micBtn: document.getElementById('drona-mic-btn'), 
         imagePreview: document.getElementById('drona-image-preview'),
         bubble: document.getElementById('drona-bubble'),
         sendBtn: document.querySelector('.send-btn-floating')
@@ -76,7 +76,6 @@ export function initDrona() {
     DOMElements.attachBtn.addEventListener('click', () => DOMElements.fileInput.click());
     DOMElements.fileInput.addEventListener('change', handleFileSelect);
 
-    // --- Voice Input Listener ---
     if (DOMElements.micBtn) {
         DOMElements.micBtn.addEventListener('click', toggleVoiceInput);
     }
@@ -96,9 +95,8 @@ export function initDrona() {
     }
 }
 
-// --- 3. VOICE INPUT LOGIC (New) ---
+// --- 3. VOICE INPUT LOGIC ---
 function toggleVoiceInput() {
-    // Check browser support
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert("Voice input is not supported in this browser. Please try Chrome or Edge.");
         return;
@@ -114,9 +112,9 @@ function toggleVoiceInput() {
 function startVoiceInput() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
-    recognition.continuous = false; // Stop after one sentence
-    recognition.interimResults = true; // Show results while speaking
-    recognition.lang = 'en-IN'; // Optimize for Indian English accents
+    recognition.continuous = false; 
+    recognition.interimResults = true; 
+    recognition.lang = 'en-IN'; 
 
     recognition.onstart = () => {
         isListening = true;
@@ -181,7 +179,7 @@ function toggleChat(forceState, updateHistory = true) {
         DOMElements.window.classList.add('hidden');
         DOMElements.window.classList.remove('flex');
         DOMElements.toggle.classList.remove('drona-toggle-hidden');
-        stopVoiceInput(); // Ensure mic stops if chat closes
+        stopVoiceInput(); 
         
         if (updateHistory && window.innerWidth < 768) {
             if (history.state && history.state.dronaChat) history.back();
@@ -415,6 +413,7 @@ function addMessage(role, content, fromCache = false, animate = false) {
     }
 }
 
+// --- 9. TYPEWRITER EFFECT WITH SMART SCROLL ---
 function typewriterEffect(element, fullText) {
     const words = fullText.split(/(\s+)/); 
     let i = 0;
@@ -424,11 +423,27 @@ function typewriterEffect(element, fullText) {
         if (i < words.length) {
             element.textContent += words[i]; 
             i++;
-            DOMElements.messages.scrollTop = DOMElements.messages.scrollHeight;
+            
+            // SMART SCROLL LOGIC:
+            // Check if user is near the bottom (within 60px tolerance)
+            const messagesEl = DOMElements.messages;
+            const threshold = 60;
+            const position = messagesEl.scrollTop + messagesEl.clientHeight;
+            const height = messagesEl.scrollHeight;
+            
+            if (height - position <= threshold) {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
         } else {
             clearInterval(interval);
+            // Final formatting render
             element.innerHTML = renderMarkdown(fullText);
-            scrollToBottom();
+            
+            // Only scroll to bottom at end if they were already following
+            const messagesEl = DOMElements.messages;
+            if (messagesEl.scrollHeight - (messagesEl.scrollTop + messagesEl.clientHeight) <= 100) {
+                scrollToBottom();
+            }
         }
     }, 15);
 }
@@ -489,38 +504,51 @@ async function loadTrendingTopics() {
     }
 }
 
+// --- 10. IMPROVED MARKDOWN PARSER ---
 function renderMarkdown(text) {
     if (!text) return '';
 
     let html = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // Headers
     html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+    html = html.replace(/^#### (.*$)/gm, '<h4>$1</h4>');
+    
+    // Bold & Italic
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/^\* (.*$)/gm, '<li>$1</li>');
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
 
+    // Lists (Basic Handle for unordered lists)
     const lines = html.split('\n');
     let inList = false;
     let result = '';
 
     lines.forEach(line => {
-        if (line.trim().startsWith('<li>')) {
+        const trimmed = line.trim();
+        // Check for bullets (* or -)
+        if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
             if (!inList) {
                 result += '<ul>'; 
                 inList = true;
             }
-            result += line;
+            // Clean up the bullet characters
+            const content = trimmed.substring(2); 
+            result += `<li>${content}</li>`;
         } else {
             if (inList) {
                 result += '</ul>'; 
                 inList = false;
             }
-            if (line.trim().length > 0 && !line.includes('<h3')) {
+            // Handle empty lines vs text lines
+            if (trimmed.length > 0 && !line.includes('<h3') && !line.includes('<h4')) {
                 result += line + '<br>';
             } else {
                 result += line;
             }
         }
     });
+    
     if (inList) result += '</ul>';
+
     return result;
 }
