@@ -1,16 +1,18 @@
 /**
  * js/drona-client.js
- * Simmering Edition: Added Typewriter Effect, Smooth Streaming Visuals & Persistence
+ * Simmering Edition: Persistence + Voice Input Enabled
  */
 
 const API_CHAT = '/api/chat';
 const API_TRENDING = '/api/trending';
-const STORAGE_KEY = 'drona_chat_history_v1'; // Key for localStorage
+const STORAGE_KEY = 'drona_chat_history_v1';
 
 let conversationHistory = [];
 let isChatOpen = false;
 let DOMElements = {};
 let pendingImages = [];
+let recognition; // Voice Recognition Instance
+let isListening = false;
 
 const GREETINGS = [
     "Ready to conquer UPSC? Let's begin.",
@@ -58,6 +60,7 @@ export function initDrona() {
         input: document.getElementById('drona-input'),
         fileInput: document.getElementById('drona-file'),
         attachBtn: document.getElementById('drona-attach-btn'),
+        micBtn: document.getElementById('drona-mic-btn'), // Added Mic Button
         imagePreview: document.getElementById('drona-image-preview'),
         bubble: document.getElementById('drona-bubble'),
         sendBtn: document.querySelector('.send-btn-floating')
@@ -73,6 +76,11 @@ export function initDrona() {
     DOMElements.attachBtn.addEventListener('click', () => DOMElements.fileInput.click());
     DOMElements.fileInput.addEventListener('change', handleFileSelect);
 
+    // --- Voice Input Listener ---
+    if (DOMElements.micBtn) {
+        DOMElements.micBtn.addEventListener('click', toggleVoiceInput);
+    }
+
     window.addEventListener('popstate', (event) => {
         if (window.innerWidth < 768) {
             if (!event.state?.dronaChat && isChatOpen) {
@@ -81,16 +89,73 @@ export function initDrona() {
         }
     });
 
-    // LOAD PERSISTED STATE
     loadHistory();
     
-    // If no history exists, show the bubble
     if (conversationHistory.length === 0) {
         showGreetingBubble();
     }
 }
 
-// --- 3. UI STATE MANAGEMENT ---
+// --- 3. VOICE INPUT LOGIC (New) ---
+function toggleVoiceInput() {
+    // Check browser support
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("Voice input is not supported in this browser. Please try Chrome or Edge.");
+        return;
+    }
+
+    if (isListening) {
+        stopVoiceInput();
+    } else {
+        startVoiceInput();
+    }
+}
+
+function startVoiceInput() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false; // Stop after one sentence
+    recognition.interimResults = true; // Show results while speaking
+    recognition.lang = 'en-IN'; // Optimize for Indian English accents
+
+    recognition.onstart = () => {
+        isListening = true;
+        DOMElements.micBtn.classList.add('listening');
+        DOMElements.input.placeholder = "Listening...";
+    };
+
+    recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+        }
+        DOMElements.input.value = transcript;
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Voice Error:", event.error);
+        stopVoiceInput();
+    };
+
+    recognition.onend = () => {
+        stopVoiceInput();
+        DOMElements.input.focus();
+    };
+
+    recognition.start();
+}
+
+function stopVoiceInput() {
+    if (recognition) {
+        recognition.stop();
+        recognition = null;
+    }
+    isListening = false;
+    if (DOMElements.micBtn) DOMElements.micBtn.classList.remove('listening');
+    if (DOMElements.input) DOMElements.input.placeholder = "Ask Drona...";
+}
+
+// --- 4. UI STATE MANAGEMENT ---
 function toggleChat(forceState, updateHistory = true) {
     const newState = (typeof forceState === 'boolean') ? forceState : !isChatOpen;
     if (newState === isChatOpen) return;
@@ -104,7 +169,6 @@ function toggleChat(forceState, updateHistory = true) {
         
         setTimeout(() => DOMElements.input.focus(), 100);
 
-        // Only add greeting if history is empty
         if (DOMElements.messages.children.length === 0 && conversationHistory.length === 0) {
             addMessage('ai', { text: GREETINGS[0] });
             loadTrendingTopics();
@@ -117,6 +181,7 @@ function toggleChat(forceState, updateHistory = true) {
         DOMElements.window.classList.add('hidden');
         DOMElements.window.classList.remove('flex');
         DOMElements.toggle.classList.remove('drona-toggle-hidden');
+        stopVoiceInput(); // Ensure mic stops if chat closes
         
         if (updateHistory && window.innerWidth < 768) {
             if (history.state && history.state.dronaChat) history.back();
@@ -135,14 +200,13 @@ function showGreetingBubble() {
 function clearChat() {
     DOMElements.messages.innerHTML = '';
     conversationHistory = [];
-    localStorage.removeItem(STORAGE_KEY); // Clear Storage
+    localStorage.removeItem(STORAGE_KEY);
     addMessage('ai', { text: GREETINGS[0] });
     pendingImages = [];
     renderImagePreview();
 }
 
-// --- 4. PERSISTENCE LOGIC (New) ---
-
+// --- 5. PERSISTENCE LOGIC ---
 function saveHistory() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory));
@@ -159,37 +223,26 @@ function loadHistory() {
         const parsedHistory = JSON.parse(saved);
         conversationHistory = parsedHistory;
 
-        // Rebuild UI from Gemini History Format
         conversationHistory.forEach(msg => {
             const uiContent = { text: '', images: [] };
-            
-            // Map Gemini parts back to UI format
             if (msg.parts) {
                 msg.parts.forEach(part => {
-                    if (part.text) {
-                        uiContent.text += part.text;
-                    }
+                    if (part.text) uiContent.text += part.text;
                     if (part.inline_data) {
                         uiContent.images.push(`data:${part.inline_data.mime_type};base64,${part.inline_data.data}`);
                     }
                 });
             }
-
-            // Map role 'model' -> 'ai'
             const role = msg.role === 'model' ? 'ai' : 'user';
-            
-            // Render without animation for restored messages
             addMessage(role, uiContent, false, false);
         });
-
     } catch (e) {
         console.error("Failed to load chat history:", e);
-        localStorage.removeItem(STORAGE_KEY); // Clear corrupted data
+        localStorage.removeItem(STORAGE_KEY);
     }
 }
 
-
-// --- 5. FILE HANDLING ---
+// --- 6. FILE HANDLING ---
 async function handleFileSelect(e) {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -250,7 +303,7 @@ function fileToBase64(file) {
     });
 }
 
-// --- 6. CORE SUBMISSION LOGIC ---
+// --- 7. CORE SUBMISSION LOGIC ---
 async function handleSubmit(e) {
     e.preventDefault();
     const text = DOMElements.input.value.trim();
@@ -278,7 +331,7 @@ async function handleSubmit(e) {
     });
 
     conversationHistory.push({ role: "user", parts: userParts });
-    saveHistory(); // Save after User Input
+    saveHistory();
     
     DOMElements.input.value = '';
     pendingImages = [];
@@ -292,19 +345,16 @@ async function handleSubmit(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: conversationHistory,
-                // Note: queryType is now handled automatically by server prompt logic
-                // we can omit it or keep it; the server ignores it in the updated version.
             })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Network error");
 
         removeLoader(loaderId);
-        // Enable "Simmering" Typewriter Effect
         addMessage('ai', { text: data.text }, data.fromCache, true);
         
         conversationHistory.push({ role: "model", parts: [{ text: data.text }] });
-        saveHistory(); // Save after AI Response
+        saveHistory();
 
     } catch (error) {
         console.error("Chat Error:", error);
@@ -313,7 +363,7 @@ async function handleSubmit(e) {
     }
 }
 
-// --- 7. MESSAGE RENDERING (With Typewriter) ---
+// --- 8. MESSAGE RENDERING ---
 function addMessage(role, content, fromCache = false, animate = false) {
     const div = document.createElement('div');
     div.className = `drona-message ${role}`;
@@ -328,18 +378,14 @@ function addMessage(role, content, fromCache = false, animate = false) {
         innerHTML += `</div>`;
     }
     
-    // Helper to construct text content
     const buildTextContainer = (text) => {
         const textHtml = (role === 'ai') ? renderMarkdown(text) : text.replace(/\n/g, '<br>');
         return `<div class="msg-content">${textHtml}</div>`;
     };
 
-    // If it's user, or cache, or we explicitly don't want animation -> Render instantly
     if (!animate || !content.text) {
         if (content.text) innerHTML += buildTextContainer(content.text);
-    } 
-    // AI response with animation
-    else {
+    } else {
         innerHTML += `<div class="msg-content"></div>`; 
     }
     
@@ -350,7 +396,6 @@ function addMessage(role, content, fromCache = false, animate = false) {
     div.innerHTML = innerHTML;
     DOMElements.messages.appendChild(div);
     
-    // Handle Typewriter Animation
     if (animate && content.text) {
         const contentDiv = div.querySelector('.msg-content');
         typewriterEffect(contentDiv, content.text);
@@ -358,7 +403,6 @@ function addMessage(role, content, fromCache = false, animate = false) {
         scrollToBottom();
     }
     
-    // Copy Button Logic
     if (role === 'ai' && content.text) {
         const copyBtn = div.querySelector('.copy-btn');
         if(copyBtn) {
@@ -371,15 +415,14 @@ function addMessage(role, content, fromCache = false, animate = false) {
     }
 }
 
-// --- 7b. TYPEWRITER EFFECT ---
 function typewriterEffect(element, fullText) {
     const words = fullText.split(/(\s+)/); 
     let i = 0;
-    element.innerHTML = ''; // Clear
+    element.innerHTML = ''; 
     
     const interval = setInterval(() => {
         if (i < words.length) {
-            element.textContent += words[i]; // Append raw text safely
+            element.textContent += words[i]; 
             i++;
             DOMElements.messages.scrollTop = DOMElements.messages.scrollHeight;
         } else {
@@ -412,7 +455,6 @@ function scrollToBottom() {
     }, 10);
 }
 
-// --- 8. TRENDING TOPICS ---
 async function loadTrendingTopics() {
     try {
         const res = await fetch(API_TRENDING);
@@ -447,7 +489,6 @@ async function loadTrendingTopics() {
     }
 }
 
-// --- 9. MARKDOWN PARSER ---
 function renderMarkdown(text) {
     if (!text) return '';
 
@@ -480,8 +521,6 @@ function renderMarkdown(text) {
             }
         }
     });
-    
     if (inList) result += '</ul>';
-
     return result;
 }
