@@ -1,10 +1,11 @@
 /**
  * js/drona-client.js
- * Simmering Edition: Added Typewriter Effect & Smooth Streaming Visuals
+ * Simmering Edition: Added Typewriter Effect, Smooth Streaming Visuals & Persistence
  */
 
 const API_CHAT = '/api/chat';
 const API_TRENDING = '/api/trending';
+const STORAGE_KEY = 'drona_chat_history_v1'; // Key for localStorage
 
 let conversationHistory = [];
 let isChatOpen = false;
@@ -80,7 +81,13 @@ export function initDrona() {
         }
     });
 
-    showGreetingBubble();
+    // LOAD PERSISTED STATE
+    loadHistory();
+    
+    // If no history exists, show the bubble
+    if (conversationHistory.length === 0) {
+        showGreetingBubble();
+    }
 }
 
 // --- 3. UI STATE MANAGEMENT ---
@@ -97,7 +104,8 @@ function toggleChat(forceState, updateHistory = true) {
         
         setTimeout(() => DOMElements.input.focus(), 100);
 
-        if (DOMElements.messages.children.length === 0) {
+        // Only add greeting if history is empty
+        if (DOMElements.messages.children.length === 0 && conversationHistory.length === 0) {
             addMessage('ai', { text: GREETINGS[0] });
             loadTrendingTopics();
         }
@@ -127,12 +135,61 @@ function showGreetingBubble() {
 function clearChat() {
     DOMElements.messages.innerHTML = '';
     conversationHistory = [];
+    localStorage.removeItem(STORAGE_KEY); // Clear Storage
     addMessage('ai', { text: GREETINGS[0] });
     pendingImages = [];
     renderImagePreview();
 }
 
-// --- 4. FILE HANDLING ---
+// --- 4. PERSISTENCE LOGIC (New) ---
+
+function saveHistory() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory));
+    } catch (e) {
+        console.warn("LocalStorage limit exceeded. Chat history not saved.", e);
+    }
+}
+
+function loadHistory() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+        const parsedHistory = JSON.parse(saved);
+        conversationHistory = parsedHistory;
+
+        // Rebuild UI from Gemini History Format
+        conversationHistory.forEach(msg => {
+            const uiContent = { text: '', images: [] };
+            
+            // Map Gemini parts back to UI format
+            if (msg.parts) {
+                msg.parts.forEach(part => {
+                    if (part.text) {
+                        uiContent.text += part.text;
+                    }
+                    if (part.inline_data) {
+                        uiContent.images.push(`data:${part.inline_data.mime_type};base64,${part.inline_data.data}`);
+                    }
+                });
+            }
+
+            // Map role 'model' -> 'ai'
+            const role = msg.role === 'model' ? 'ai' : 'user';
+            
+            // Render without animation for restored messages
+            addMessage(role, uiContent, false, false);
+        });
+
+    } catch (e) {
+        console.error("Failed to load chat history:", e);
+        localStorage.removeItem(STORAGE_KEY); // Clear corrupted data
+    }
+}
+
+
+// --- 5. FILE HANDLING ---
 async function handleFileSelect(e) {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -193,7 +250,7 @@ function fileToBase64(file) {
     });
 }
 
-// --- 5. CORE SUBMISSION LOGIC ---
+// --- 6. CORE SUBMISSION LOGIC ---
 async function handleSubmit(e) {
     e.preventDefault();
     const text = DOMElements.input.value.trim();
@@ -221,6 +278,7 @@ async function handleSubmit(e) {
     });
 
     conversationHistory.push({ role: "user", parts: userParts });
+    saveHistory(); // Save after User Input
     
     DOMElements.input.value = '';
     pendingImages = [];
@@ -234,7 +292,8 @@ async function handleSubmit(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: conversationHistory,
-                queryType: 'academic'
+                // Note: queryType is now handled automatically by server prompt logic
+                // we can omit it or keep it; the server ignores it in the updated version.
             })
         });
         const data = await response.json();
@@ -243,7 +302,9 @@ async function handleSubmit(e) {
         removeLoader(loaderId);
         // Enable "Simmering" Typewriter Effect
         addMessage('ai', { text: data.text }, data.fromCache, true);
+        
         conversationHistory.push({ role: "model", parts: [{ text: data.text }] });
+        saveHistory(); // Save after AI Response
 
     } catch (error) {
         console.error("Chat Error:", error);
@@ -252,7 +313,7 @@ async function handleSubmit(e) {
     }
 }
 
-// --- 6. MESSAGE RENDERING (With Typewriter) ---
+// --- 7. MESSAGE RENDERING (With Typewriter) ---
 function addMessage(role, content, fromCache = false, animate = false) {
     const div = document.createElement('div');
     div.className = `drona-message ${role}`;
@@ -310,13 +371,8 @@ function addMessage(role, content, fromCache = false, animate = false) {
     }
 }
 
-// --- 6b. TYPEWRITER EFFECT ---
+// --- 7b. TYPEWRITER EFFECT ---
 function typewriterEffect(element, fullText) {
-    // We'll stream the raw text first, then render markdown at the end for stability,
-    // OR we can render partial markdown. For stability, we type plain text chars.
-    // Note: "Simmering" implies fluid reading.
-    
-    // Faster approach: Split by words to prevent choppy char-by-char feel
     const words = fullText.split(/(\s+)/); 
     let i = 0;
     element.innerHTML = ''; // Clear
@@ -325,15 +381,13 @@ function typewriterEffect(element, fullText) {
         if (i < words.length) {
             element.textContent += words[i]; // Append raw text safely
             i++;
-            // Auto-scroll while typing
             DOMElements.messages.scrollTop = DOMElements.messages.scrollHeight;
         } else {
             clearInterval(interval);
-            // Final Pass: Render Markdown
             element.innerHTML = renderMarkdown(fullText);
             scrollToBottom();
         }
-    }, 15); // Speed: 15ms per word/space chunk
+    }, 15);
 }
 
 function showLoader() {
@@ -358,21 +412,17 @@ function scrollToBottom() {
     }, 10);
 }
 
-// --- 7. TRENDING TOPICS ---
+// --- 8. TRENDING TOPICS ---
 async function loadTrendingTopics() {
     try {
         const res = await fetch(API_TRENDING);
         const data = await res.json();
         
         if (data.topics && data.topics.length > 0) {
-            // Container for the suggestions
             const container = document.createElement('div');
             container.className = 'suggestion-group';
-            
-            // Label
             container.innerHTML = `<span class="suggestion-label">Suggested Topics</span>`;
             
-            // Generate Buttons
             data.topics.forEach(topic => {
                 const btn = document.createElement('button');
                 btn.className = 'suggestion-btn';
@@ -384,12 +434,9 @@ async function loadTrendingTopics() {
                 container.appendChild(btn);
             });
             
-            // Create the AI message bubble to hold these suggestions
             const msgDiv = document.createElement('div');
-            // 'ai' class gives it the dark background, 'drona-message' gives shape
             msgDiv.className = 'drona-message ai'; 
-            msgDiv.style.maxWidth = '90%'; // Inline fix for width
-            
+            msgDiv.style.maxWidth = '90%';
             msgDiv.appendChild(container);
             
             DOMElements.messages.appendChild(msgDiv);
@@ -400,7 +447,7 @@ async function loadTrendingTopics() {
     }
 }
 
-// --- 8. REFINED MARKDOWN PARSER ---
+// --- 9. MARKDOWN PARSER ---
 function renderMarkdown(text) {
     if (!text) return '';
 
@@ -408,7 +455,6 @@ function renderMarkdown(text) {
     html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/^\* (.*$)/gm, '<li>$1</li>');
-    // Emphasize italics for citations/cases
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
 
     const lines = html.split('\n');
