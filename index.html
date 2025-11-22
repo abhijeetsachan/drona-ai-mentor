@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drona AI | UPSC Mentorship Evolved</title>
+    <meta name="description" content="The Dual-Brain AI Mentor for Civil Services.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/drona.css">
+    <style>
+        /* --- Mock Chat Animations --- */
+        .mock-msg { transition: opacity 0.5s ease, transform 0.5s ease; opacity: 1; transform: translateY(0); }
+        .mock-msg.fade-out { opacity: 0; transform: translateY(10px); }
+        .mock-title { transition: opacity 0.3s; }
+        .mock-title.fade-out { opacity: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glows">
+        <div class="hero-blob blob-left"></div>
+        <div class="hero-blob blob-right"></div>
+        <div class="hero-blob blob-center"></div>
+    </div>
+
+    <div id="mobile-menu-overlay" class="mobile-nav-overlay hidden">
+        <div class="mobile-nav-content">
+            <button id="mobile-menu-close" class="mobile-close-btn"><i class="fas fa-times"></i></button>
+            <div class="mobile-nav-links">
+                <a href="#features" class="mobile-link">Features</a>
+                <a href="#benefits" class="mobile-link">Benefits</a>
+                <a href="#pricing" class="mobile-link">Pricing</a>
+                <a href="#value" class="mobile-link">Value</a>
+                <a href="#docs" class="mobile-link">Docs</a>
+            </div>
+            <button id="mobile-cta" class="button-main w-full mt-6">Try Beta</button>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <div class="nav-wrap">
+            <a href="#" class="logo-link">
+                <div class="logo-icon"><i class="fas fa-chess-knight"></i></div>
+                <div class="logo-text">Drona</div>
+            </a>
+
+            <div class="nav-links-list">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#benefits" class="nav-link">Benefits</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <a href="#value" class="nav-link">Value</a> 
+                <a href="#docs" class="nav-link">Docs <i class="fas fa-arrow-right" style="transform: rotate(-45deg);"></i></a>
+            </div>
+
+            <div class="nav-action">
+                <a href="#" id="header-cta" class="button-main desktop-only">Try Beta</a>
+                <button id="mobile-menu-open" class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content text-center">
+                <div class="eyebrow-wrap fade-in-up">
+                    <span class="eyebrow-dot"></span>
+                    <span class="eyebrow-text">AI-Powered UPSC Mentor</span>
+                </div>
+
+                <h1 class="hero-heading fade-in-up" style="animation-delay: 0.1s;">
+                    Your Personal <br>
+                    <span class="text-color-gradient">Mentor</span>  in the Cloud.
+                </h1>
+
+                <p class="hero-subtext fade-in-up" style="animation-delay: 0.2s;">
+                    Stop guessing. Drona switches modes between <strong>Prelims Facts</strong> and <strong>Mains Strategy</strong> automatically. Backed by Supreme Court judgments.
+                </p>
+
+                <div class="hero-btns fade-in-up" style="animation-delay: 0.3s;">
+                    <button id="hero-cta" class="button-hero-primary">
+                        <span>Start Chatting</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button class="button-secondary">
+                        <i class="fas fa-play-circle mr-2"></i> View Demo
+                    </button>
+                </div>
+            </div>
+
+            <div class="hero-visual-wrap fade-in-up" style="animation-delay: 0.5s;">
+                <div class="hero-visual-glass">
+                    <div class="mock-chat-interface">
+                        <div class="mock-header">
+                            <div class="mock-dots"><span></span><span></span><span></span></div>
+                            <div class="mock-title" id="dynamic-title">Mains Answer Analysis - GS Paper II</div>
+                        </div>
+                        <div class="mock-body">
+                            <div class="mock-msg user" id="dynamic-user-msg">
+                                Analyze this editorial on Federalism.
+                            </div>
+                            <div class="mock-msg ai" id="dynamic-ai-msg">
+                                <strong>Core Issue:</strong> Fiscal Federalism.<br>
+                                <strong>Reference:</strong> Article 280 (Finance Commission).<br>
+                                <strong>Key Judgment:</strong> <em>S.R. Bommai vs Union of India (1994)</em>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual-shadow"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="integration-section">
+        <div class="marquee-wrapper">
+            <div class="marquee-track">
+                <div class="marquee-item"><i class="fas fa-gavel"></i> Constitutional Morality</div>
+                <div class="marquee-item"><i class="fas fa-globe"></i> International Relations</div>
+                <div class="marquee-item"><i class="fas fa-leaf"></i> Environment Impact</div>
+                <div class="marquee-item"><i class="fas fa-rupee-sign"></i> Fiscal Policy</div>
+                <div class="marquee-item"><i class="fas fa-robot"></i> AI Ethics</div>
+                <div class="marquee-item"><i class="fas fa-gavel"></i> Constitutional Morality</div>
+                <div class="marquee-item"><i class="fas fa-globe"></i> International Relations</div>
+                <div class="marquee-item"><i class="fas fa-leaf"></i> Environment Impact</div>
+                <div class="marquee-item"><i class="fas fa-rupee-sign"></i> Fiscal Policy</div>
+                <div class="marquee-item"><i class="fas fa-robot"></i> AI Ethics</div>
+            </div>
+        </div>
+        <div class="overlay-left"></div>
+        <div class="overlay-right"></div>
+    </section>
+
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-text-cell">
+                    <div class="eyebrow-wrap"><span class="eyebrow-text">Workflow Efficiency</span></div>
+                    <h2>Prelims vs Mains.<br><span class="text-color-gradient">Handled Instantly.</span></h2>
+                    <p class="text-muted-p">Upload a handwritten answer or a news clipping. Drona detects the context and provides specific, citation-backed evaluations.</p>
+                    
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-accent"></i>
+                            <span>Detects "Discuss" vs "Critically Analyze"</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check-circle text-accent"></i>
+                            <span>Cites ARC Reports & Committees</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="features-cards-grid">
+                    <div class="glass-card card-tilted-left">
+                        <i class="fas fa-brain icon-lg"></i>
+                        <h3>Dual Mode</h3>
+                        <p>Auto-switching logic based on your query type.</p>
+                    </div>
+                    <div class="glass-card card-tilted-right">
+                        <i class="fas fa-file-signature icon-lg"></i>
+                        <h3>Evaluation</h3>
+                        <p>Upload images for instant grading.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="benefits" class="benefits-section">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="benefits-heading">Why generic chatbots <span class="text-color-gradient">fail you</span></h2>
+                <p class="benefits-subtext">ChatGPT is great for emails, but it doesn't understand the demands of UPSC. You need more than just "information"—you need exam-relevant strategy.</p>
+            </div>
+            
+            <div class="benefits-grid">
+                <div class="glass-card benefit-card">
+                    <div class="icon-wrap-gradient"><i class="fas fa-brain"></i></div>
+                    <h3>It Knows the Game</h3>
+                    <p>Prelims is about facts; Mains is about analysis. Drona automatically switches modes. Ask for a fact, get a bulleted list. Ask for an opinion, get a structured essay.</p>
+                </div>
+                
+                <div class="glass-card benefit-card">
+                    <div class="icon-wrap-gradient"><i class="fas fa-gavel"></i></div>
+                    <h3>Examiners Love Evidence</h3>
+                    <p>A Mains answer without proof is just an opinion. Drona backs every argument with specific data, example, Supreme Court judgments, Articles, and Committee Reports.</p>
+                </div>
+                
+                <div class="glass-card benefit-card">
+                    <div class="icon-wrap-gradient"><i class="fas fa-bolt"></i></div>
+                    <h3>Decode the News Instantly</h3>
+                    <p>Don't just read the editorial; understand its syllabus relevance. Upload a clipping, and Drona will extract the core issues for GS-2 or GS-3 in seconds.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-layout">
+                <div class="footer-brand-col">
+                    <a href="#" class="logo-link footer-logo">
+                        <div class="logo-icon"><i class="fas fa-chess-knight"></i></div>
+                        <div class="logo-text">Drona</div>
+                    </a>
+                    <p class="footer-desc">Simplifying your UPSC preparation journey by enhancing answer writing skills and driving exam success.</p>
+                </div>
+                <div class="footer-links-grid">
+                    <div class="footer-col">
+                        <h4>Product</h4>
+                        <ul class="footer-list">
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#benefits">Benefits</a></li>
+                            <li><a href="#pricing">Pricing</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Socials</h4>
+                        <ul class="footer-list">
+                            <li><a href="#">LinkedIn</a></li>
+                            <li><a href="#">Instagram</a></li>
+                            <li><a href="#">Twitter (X)</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Company</h4>
+                        <ul class="footer-list">
+                            <li><a href="#">Privacy</a></li>
+                            <li><a href="#">Terms</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <button id="drona-toggle" title="Open Mentor"><i class="fas fa-chess-knight"></i></button>
+    <div id="drona-bubble" class="hidden"><div class="bubble-text">Ready for the Daily Current Affairs?</div></div>
+
+    <div id="drona-window" class="hidden glass-panel">
+        <div class="chat-header-glass">
+            <div class="header-left"><h3>Drona Mentor</h3><span class="status-badge">Online</span></div>
+            <div class="header-actions">
+                <button id="drona-clear" title="Clear Chat"><i class="fas fa-eraser"></i></button>
+                <button id="drona-close" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div id="drona-messages"></div>
+        <div id="drona-image-preview" class="hidden"></div>
+       <form id="drona-form" class="chat-input-area">
+    <input type="file" id="drona-file" accept="image/*" multiple class="hidden">
+
+    <div class="input-smart-pill">
+        <input type="text" id="drona-input" placeholder="Ask Drona..." autocomplete="off">
+
+        <div class="pill-icons-right">
+            <button type="button" id="drona-attach-btn" class="icon-clean" title="Upload Image">
+                <i class="fas fa-paperclip"></i>
+            </button>
+
+            <button type="button" id="drona-mic-btn" class="icon-clean" title="Voice Input">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </div>
+    </div>
+
+    <button type="submit" class="send-btn-floating" aria-label="Send">
+        <i class="fas fa-paper-plane"></i>
+    </button>
+</form>
+    </div>
+
+    <script type="module">
+        import { initDrona, initMobileNav } from './js/drona-client.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            initDrona();
+            initMobileNav(); // Initialize new mobile menu
+            
+            // CTA Triggers (Open Chat)
+            const triggers = ['header-cta', 'hero-cta', 'mobile-cta'];
+            triggers.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // If it's the mobile CTA, close the menu first
+                    if(id === 'mobile-cta') {
+                        document.getElementById('mobile-menu-close').click();
+                    }
+                    document.getElementById('drona-toggle').click();
+                });
+            });
+
+            // --- Mock Chat Animation Logic ---
+            const mockData = [
+                {
+                    title: "Mains Answer Analysis - GS Paper I",
+                    user: "Explain the key features of Chola Bronze Nataraja.",
+                    ai: "<strong>Symbolism:</strong> Cosmic Dance (Tandava).<br><strong>Technique:</strong> Lost-wax casting (Cire Perdue).<br><strong>Example:</strong> <em>Virupaksha Temple</em> architecture."
+                },
+                {
+                    title: "Mains Answer Analysis - GS Paper II",
+                    user: "Analyze this editorial on Federalism.",
+                    ai: "<strong>Core Issue:</strong> Fiscal Federalism.<br><strong>Reference:</strong> Article 280 (Finance Commission).<br><strong>Judgment:</strong> <em>S.R. Bommai vs Union of India</em> (State Autonomy)."
+                },
+                {
+                    title: "Mains Answer Analysis - GS Paper III",
+                    user: "Evaluate the Green Hydrogen Mission.",
+                    ai: "<strong>Goal:</strong> 5 MMT production by 2030.<br><strong>Benefit:</strong> Decarbonization of steel sector.<br><strong>Report:</strong> <em>NITI Aayog's</em> Harnessing Green Hydrogen."
+                },
+                {
+                    title: "Mains Answer Analysis - GS Paper IV",
+                    user: "Define 'Integrity' in Civil Services.",
+                    ai: "<strong>Definition:</strong> Moral uprightness in private & public life.<br><strong>Principle:</strong> Nolan Committee's Principle of Objectivity.<br><strong>Example:</strong> Refusing personal favors."
+                }
+            ];
+
+            let currentIndex = 0;
+            const titleEl = document.getElementById('dynamic-title');
+            const userMsgEl = document.getElementById('dynamic-user-msg');
+            const aiMsgEl = document.getElementById('dynamic-ai-msg');
+
+            setInterval(() => {
+                titleEl.classList.add('fade-out');
+                userMsgEl.classList.add('fade-out');
+                aiMsgEl.classList.add('fade-out');
+
+                setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % mockData.length;
+                    const data = mockData[currentIndex];
+                    titleEl.textContent = data.title;
+                    userMsgEl.textContent = data.user;
+                    aiMsgEl.innerHTML = data.ai;
+                    titleEl.classList.remove('fade-out');
+                    userMsgEl.classList.remove('fade-out');
+                    aiMsgEl.classList.remove('fade-out');
+                }, 500); 
+            }, 5000); 
+        });
+    </script>
+</body>
+</html>
