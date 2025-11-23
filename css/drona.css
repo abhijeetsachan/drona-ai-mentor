@@ -543,7 +543,7 @@ body {
 /* --- Beta Superscripted Text on Logo ---*/
 .beta-badge {
     display: inline-block;
-    font-size: 0.45em; /* Relative size so it scales with logo */
+    font-size: 0.5em; /* Relative size so it scales with logo */
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;
