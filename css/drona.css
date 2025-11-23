@@ -148,7 +148,7 @@ body {
 .button-secondary:hover { background: rgba(255,255,255,0.1); border-color: white; }
 .button-secondary:active { transform: scale(0.95); }
 
-.hero-visual-wrap { margin-top: 80px; perspective: 1000px; }
+.hero-visual-wrap { margin-top: 50px; perspective: 1000px; }
 .hero-visual-glass {
     background: rgba(20, 25, 40, 0.7); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; 
     backdrop-filter: blur(10px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
