@@ -93,7 +93,7 @@ body {
     .nav-links-list { display: none; }
     .desktop-only { display: none; }
     .mobile-menu-toggle { display: block; }
-    .button-main { padding: 8px 16px; font-size: 13px; }
+    .button-main { padding: 8px 16px; font-size: 13px; margin: 25px; }
 }
 
 /* =========================================
