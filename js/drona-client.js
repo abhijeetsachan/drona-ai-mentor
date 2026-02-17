@@ -11,7 +11,7 @@ let conversationHistory = [];
 let isChatOpen = false;
 let DOMElements = {};
 let pendingImages = [];
-let recognition; 
+let recognition;
 let isListening = false;
 
 const GREETINGS = [
@@ -33,7 +33,7 @@ export function initMobileNav() {
     function toggleMenu(show) {
         if (show) {
             overlay.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; 
+            document.body.style.overflow = 'hidden';
         } else {
             overlay.classList.add('hidden');
             document.body.style.overflow = '';
@@ -60,18 +60,36 @@ export function initDrona() {
         input: document.getElementById('drona-input'),
         fileInput: document.getElementById('drona-file'),
         attachBtn: document.getElementById('drona-attach-btn'),
-        micBtn: document.getElementById('drona-mic-btn'), 
+        micBtn: document.getElementById('drona-mic-btn'),
         imagePreview: document.getElementById('drona-image-preview'),
         bubble: document.getElementById('drona-bubble'),
-        sendBtn: document.querySelector('.send-btn-floating')
+        sendBtn: document.querySelector('.send-btn-floating'),
+        expandBtn: document.getElementById('drona-expand')
     };
 
     if (!DOMElements.toggle || !DOMElements.window) return;
 
     DOMElements.toggle.addEventListener('click', () => toggleChat(true));
-    DOMElements.close.addEventListener('click', () => toggleChat(false));
+    DOMElements.close.addEventListener('click', () => {
+        toggleChat(false);
+        DOMElements.window.classList.remove('expanded'); // Reset on close
+    });
     if (DOMElements.clear) DOMElements.clear.addEventListener('click', clearChat);
-    
+
+    if (DOMElements.expandBtn) {
+        DOMElements.expandBtn.addEventListener('click', () => {
+            DOMElements.window.classList.toggle('expanded');
+            const icon = DOMElements.expandBtn.querySelector('i');
+            if (DOMElements.window.classList.contains('expanded')) {
+                icon.className = 'fas fa-compress-alt';
+                DOMElements.expandBtn.title = "Compress Chat";
+            } else {
+                icon.className = 'fas fa-expand-alt';
+                DOMElements.expandBtn.title = "Expand Chat";
+            }
+        });
+    }
+
     DOMElements.form.addEventListener('submit', handleSubmit);
     DOMElements.attachBtn.addEventListener('click', () => DOMElements.fileInput.click());
     DOMElements.fileInput.addEventListener('change', handleFileSelect);
@@ -89,7 +107,7 @@ export function initDrona() {
     });
 
     loadHistory();
-    
+
     if (conversationHistory.length === 0) {
         showGreetingBubble();
     }
@@ -112,9 +130,9 @@ function toggleVoiceInput() {
 function startVoiceInput() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
-    recognition.continuous = false; 
-    recognition.interimResults = true; 
-    recognition.lang = 'en-IN'; 
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
 
     recognition.onstart = () => {
         isListening = true;
@@ -158,13 +176,13 @@ function toggleChat(forceState, updateHistory = true) {
     const newState = (typeof forceState === 'boolean') ? forceState : !isChatOpen;
     if (newState === isChatOpen) return;
     isChatOpen = newState;
-    
+
     if (isChatOpen) {
         DOMElements.window.classList.remove('hidden');
         DOMElements.window.classList.add('flex');
         DOMElements.toggle.classList.add('drona-toggle-hidden');
         DOMElements.bubble.classList.add('hidden');
-        
+
         setTimeout(() => DOMElements.input.focus(), 100);
 
         if (DOMElements.messages.children.length === 0 && conversationHistory.length === 0) {
@@ -179,8 +197,8 @@ function toggleChat(forceState, updateHistory = true) {
         DOMElements.window.classList.add('hidden');
         DOMElements.window.classList.remove('flex');
         DOMElements.toggle.classList.remove('drona-toggle-hidden');
-        stopVoiceInput(); 
-        
+        stopVoiceInput();
+
         if (updateHistory && window.innerWidth < 768) {
             if (history.state && history.state.dronaChat) history.back();
         }
@@ -257,15 +275,15 @@ async function handleFileSelect(e) {
         }
         try {
             const base64 = await fileToBase64(file);
-            pendingImages.push({ 
-                mime_type: file.type, 
-                data: base64, 
-                id: Date.now() + Math.random() 
+            pendingImages.push({
+                mime_type: file.type,
+                data: base64,
+                id: Date.now() + Math.random()
             });
         } catch (err) { console.error("File read error:", err); }
     }
     renderImagePreview();
-    DOMElements.fileInput.value = ''; 
+    DOMElements.fileInput.value = '';
 }
 
 function renderImagePreview() {
@@ -282,7 +300,7 @@ function renderImagePreview() {
             <button type="button" class="remove-img-btn" data-index="${index}">&times;</button>
         </div>
     `).join('');
-    
+
     container.querySelectorAll('.remove-img-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const idx = parseInt(e.target.dataset.index);
@@ -296,7 +314,7 @@ function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]); 
+        reader.onload = () => resolve(reader.result.split(',')[1]);
         reader.onerror = error => reject(error);
     });
 }
@@ -309,10 +327,10 @@ async function handleSubmit(e) {
 
     if (DOMElements.sendBtn) {
         DOMElements.sendBtn.classList.remove('sending');
-        void DOMElements.sendBtn.offsetWidth; 
+        void DOMElements.sendBtn.offsetWidth;
         DOMElements.sendBtn.classList.add('sending');
         setTimeout(() => {
-            if(DOMElements.sendBtn) DOMElements.sendBtn.classList.remove('sending');
+            if (DOMElements.sendBtn) DOMElements.sendBtn.classList.remove('sending');
         }, 600);
     }
 
@@ -330,7 +348,7 @@ async function handleSubmit(e) {
 
     conversationHistory.push({ role: "user", parts: userParts });
     saveHistory();
-    
+
     DOMElements.input.value = '';
     pendingImages = [];
     renderImagePreview();
@@ -350,7 +368,7 @@ async function handleSubmit(e) {
 
         removeLoader(loaderId);
         addMessage('ai', { text: data.text }, data.fromCache, true);
-        
+
         conversationHistory.push({ role: "model", parts: [{ text: data.text }] });
         saveHistory();
 
@@ -365,9 +383,9 @@ async function handleSubmit(e) {
 function addMessage(role, content, fromCache = false, animate = false) {
     const div = document.createElement('div');
     div.className = `drona-message ${role}`;
-    
+
     let innerHTML = '';
-    
+
     if (content.images && content.images.length > 0) {
         innerHTML += `<div class="msg-images-grid">`;
         content.images.forEach(src => {
@@ -375,7 +393,7 @@ function addMessage(role, content, fromCache = false, animate = false) {
         });
         innerHTML += `</div>`;
     }
-    
+
     const buildTextContainer = (text) => {
         const textHtml = (role === 'ai') ? renderMarkdown(text) : text.replace(/\n/g, '<br>');
         return `<div class="msg-content">${textHtml}</div>`;
@@ -384,26 +402,26 @@ function addMessage(role, content, fromCache = false, animate = false) {
     if (!animate || !content.text) {
         if (content.text) innerHTML += buildTextContainer(content.text);
     } else {
-        innerHTML += `<div class="msg-content"></div>`; 
+        innerHTML += `<div class="msg-content"></div>`;
     }
-    
+
     if (role === 'ai') {
         innerHTML += `<div class="msg-actions"><button type="button" class="copy-btn" title="Copy"><i class="fas fa-copy"></i></button></div>`;
     }
-    
+
     div.innerHTML = innerHTML;
     DOMElements.messages.appendChild(div);
-    
+
     if (animate && content.text) {
         const contentDiv = div.querySelector('.msg-content');
         typewriterEffect(contentDiv, content.text);
     } else {
         scrollToBottom();
     }
-    
+
     if (role === 'ai' && content.text) {
         const copyBtn = div.querySelector('.copy-btn');
-        if(copyBtn) {
+        if (copyBtn) {
             copyBtn.addEventListener('click', () => {
                 navigator.clipboard.writeText(content.text);
                 copyBtn.innerHTML = '<i class="fas fa-check"></i>';
@@ -415,22 +433,22 @@ function addMessage(role, content, fromCache = false, animate = false) {
 
 // --- 9. TYPEWRITER EFFECT WITH SMART SCROLL ---
 function typewriterEffect(element, fullText) {
-    const words = fullText.split(/(\s+)/); 
+    const words = fullText.split(/(\s+)/);
     let i = 0;
-    element.innerHTML = ''; 
-    
+    element.innerHTML = '';
+
     const interval = setInterval(() => {
         if (i < words.length) {
-            element.textContent += words[i]; 
+            element.textContent += words[i];
             i++;
-            
+
             // SMART SCROLL LOGIC:
             // Check if user is near the bottom (within 60px tolerance)
             const messagesEl = DOMElements.messages;
             const threshold = 60;
             const position = messagesEl.scrollTop + messagesEl.clientHeight;
             const height = messagesEl.scrollHeight;
-            
+
             if (height - position <= threshold) {
                 messagesEl.scrollTop = messagesEl.scrollHeight;
             }
@@ -438,7 +456,7 @@ function typewriterEffect(element, fullText) {
             clearInterval(interval);
             // Final formatting render
             element.innerHTML = renderMarkdown(fullText);
-            
+
             // Only scroll to bottom at end if they were already following
             const messagesEl = DOMElements.messages;
             if (messagesEl.scrollHeight - (messagesEl.scrollTop + messagesEl.clientHeight) <= 100) {
@@ -474,33 +492,33 @@ async function loadTrendingTopics() {
     try {
         const res = await fetch(API_TRENDING);
         const data = await res.json();
-        
+
         if (data.topics && data.topics.length > 0) {
             const container = document.createElement('div');
             container.className = 'suggestion-group';
             container.innerHTML = `<span class="suggestion-label">Suggested Topics</span>`;
-            
+
             data.topics.forEach(topic => {
                 const btn = document.createElement('button');
                 btn.className = 'suggestion-btn';
                 btn.textContent = topic;
-                btn.onclick = () => { 
-                    DOMElements.input.value = topic; 
-                    handleSubmit(new Event('submit')); 
+                btn.onclick = () => {
+                    DOMElements.input.value = topic;
+                    handleSubmit(new Event('submit'));
                 };
                 container.appendChild(btn);
             });
-            
+
             const msgDiv = document.createElement('div');
-            msgDiv.className = 'drona-message ai'; 
+            msgDiv.className = 'drona-message ai';
             msgDiv.style.maxWidth = '90%';
             msgDiv.appendChild(container);
-            
+
             DOMElements.messages.appendChild(msgDiv);
             scrollToBottom();
         }
-    } catch (e) { 
-        console.warn("Trending topics failed to load", e); 
+    } catch (e) {
+        console.warn("Trending topics failed to load", e);
     }
 }
 
@@ -509,14 +527,24 @@ function renderMarkdown(text) {
     if (!text) return '';
 
     let html = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    
+
+    // Diagram Box Extraction
+    // Look for patterns like "Visual Strategy: [Description]" or "Diagram Suggestion: [Description]"
+    html = html.replace(/(?:Visual Strategy|Diagram Suggestion|Diagram Recommendations):\s*(.*?)(?:\n|$)/gi, (match, p1) => {
+        return `
+        <div class="diagram-box">
+            <h5><i class="fas fa-project-diagram"></i> Visual Strategy</h5>
+            <p>${p1}</p>
+        </div>`;
+    });
+
     // Headers
     html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
     html = html.replace(/^#### (.*$)/gm, '<h4>$1</h4>');
-    
+
     // Bold & Italic
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     // Lists (Basic Handle for unordered lists)
     const lines = html.split('\n');
@@ -528,15 +556,15 @@ function renderMarkdown(text) {
         // Check for bullets (* or -)
         if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
             if (!inList) {
-                result += '<ul>'; 
+                result += '<ul>';
                 inList = true;
             }
             // Clean up the bullet characters
-            const content = trimmed.substring(2); 
+            const content = trimmed.substring(2);
             result += `<li>${content}</li>`;
         } else {
             if (inList) {
-                result += '</ul>'; 
+                result += '</ul>';
                 inList = false;
             }
             // Handle empty lines vs text lines
@@ -547,7 +575,7 @@ function renderMarkdown(text) {
             }
         }
     });
-    
+
     if (inList) result += '</ul>';
 
     return result;
